@@ -1,0 +1,163 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =====================================================
+   VOLTAR — Design System
+   Juventud. Energía. Sin límites.
+   ===================================================== */
+
+@layer base {
+  :root {
+    --background:    #0A0A0A;
+    --surface:       #111111;
+    --card:          #161616;
+    --card-raised:   #1C1C1C;
+    --foreground:    #F0F0F0;
+    --muted-fg:      #666666;
+    --subtle:        #333333;
+    --border:        #222222;
+    --border-strong: #333333;
+    --volt:          #C8FF00;
+    --volt-dim:      rgba(200, 255, 0, 0.1);
+    --volt-glow:     rgba(200, 255, 0, 0.3);
+    --red-brand:     #FF2020;
+  }
+
+  *, *::before, *::after {
+    border-color: var(--border);
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    background-color: #0A0A0A;
+  }
+
+  body {
+    font-family: var(--font-inter), system-ui, sans-serif;
+    background-color: var(--background);
+    color: var(--foreground);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-bebas), sans-serif;
+    letter-spacing: 0.02em;
+    line-height: 0.95;
+  }
+
+  ::selection {
+    background-color: var(--volt);
+    color: #0A0A0A;
+  }
+
+  ::-webkit-scrollbar       { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--surface); }
+  ::-webkit-scrollbar-thumb { background: var(--volt); }
+
+  /* Fix: autofill override — prevents white bg on inputs */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill,
+  select:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0px 1000px var(--surface) inset !important;
+    -webkit-text-fill-color: var(--foreground) !important;
+    caret-color: var(--foreground);
+  }
+}
+
+/* =====================================================
+   ANIMATIONS — fill-mode: both prevents flash
+   ===================================================== */
+
+@layer utilities {
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes volt-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 var(--volt-glow); }
+    50%       { box-shadow: 0 0 20px 6px var(--volt-glow); }
+  }
+
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+  @keyframes shimmer {
+    from { background-position: -200% center; }
+    to   { background-position: 200% center; }
+  }
+
+  /* fill-mode: both → element is at "from" state BEFORE animation starts (no flash) */
+  .animate-fade-up {
+    animation: fade-up 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .animate-volt-pulse { animation: volt-pulse 2s ease-in-out infinite; }
+  .animate-marquee    { animation: marquee 22s linear infinite; }
+
+  .delay-100 { animation-delay: 0.08s; }
+  .delay-200 { animation-delay: 0.16s; }
+  .delay-300 { animation-delay: 0.24s; }
+  .delay-400 { animation-delay: 0.32s; }
+
+  /* ── Brand utilities ── */
+  .text-volt          { color: var(--volt); }
+  .bg-volt            { background-color: var(--volt); }
+  .border-volt        { border-color: var(--volt); }
+  .text-red-brand     { color: var(--red-brand); }
+
+  .text-gradient-volt {
+    background: linear-gradient(135deg, #C8FF00, #8FFF00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Skeleton shimmer for loading states */
+  .skeleton {
+    background: linear-gradient(90deg, var(--card) 25%, var(--card-raised) 50%, var(--card) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s ease-in-out infinite;
+  }
+
+  /* Volt stripe bg pattern */
+  .volt-grid {
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 79px, rgba(200,255,0,0.035) 79px, rgba(200,255,0,0.035) 80px),
+      repeating-linear-gradient(90deg, transparent, transparent 79px, rgba(200,255,0,0.035) 79px, rgba(200,255,0,0.035) 80px);
+  }
+
+  /* Consistent tag */
+  .tag-volt {
+    display: inline-block;
+    background-color: var(--volt-dim);
+    color: var(--volt);
+    border: 1px solid rgba(200,255,0,0.25);
+    font-size: 0.65rem;
+    font-weight: 800;
+    font-family: var(--font-inter), sans-serif;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.55rem;
+    border-radius: 2px;
+  }
+
+  /* Consistent input style — reusable via @apply */
+  .input-volt {
+    width: 100%;
+    border: 1px solid var(--border);
+    background-color: var(--surface);
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    color: var(--foreground);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .input-volt::placeholder { color: var(--muted-fg); }
+  .input-volt:focus { border-color: var(--volt); }
+}
