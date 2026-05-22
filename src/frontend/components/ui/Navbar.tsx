@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { ShoppingBag, Menu, X } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useCart } from '@/frontend/context/CartContext';
 
 const NAV_LINKS = [
@@ -14,7 +14,7 @@ const NAV_LINKS = [
   { href: '/custom',                        label: 'CUSTOM STUDIO', isExact: true },
 ];
 
-export default function Navbar() {
+function NavbarContent() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
@@ -136,5 +136,30 @@ export default function Navbar() {
         </div>
       )}
     </header>
+  );
+}
+
+export default function Navbar() {
+  return (
+    <Suspense fallback={
+      <header className="sticky top-0 z-50 w-full border-b border-border bg-surface/95 backdrop-blur-md">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-0">
+            <span className="font-display text-4xl tracking-widest text-foreground">VOLT</span>
+            <span className="font-display text-4xl tracking-widest text-volt">AR</span>
+          </div>
+          <div className="hidden gap-2 md:flex">
+            {NAV_LINKS.map(({ href, label }) => (
+              <div key={href} className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-muted-fg opacity-50">
+                {label}
+              </div>
+            ))}
+          </div>
+          <div className="h-10 w-10 border border-border bg-card" />
+        </div>
+      </header>
+    }>
+      <NavbarContent />
+    </Suspense>
   );
 }

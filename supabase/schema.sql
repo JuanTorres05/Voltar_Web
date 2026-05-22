@@ -16,6 +16,7 @@ CREATE TABLE products (
   name TEXT NOT NULL,
   description TEXT,
   price DECIMAL(10, 2) NOT NULL,
+  category TEXT NOT NULL,
   images TEXT[] DEFAULT '{}', -- URLs de Cloudinary
   sizes TEXT[] DEFAULT '{}',
   colors TEXT[] DEFAULT '{}',

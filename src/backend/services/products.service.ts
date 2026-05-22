@@ -101,28 +101,82 @@ const MOCK_PRODUCTS: Product[] = [
 
 /** Obtener todos los productos (con filtros opcionales) */
 export async function getProducts(filters: ProductFilters = {}): Promise<Product[]> {
-  // Simular retraso de red
-  await new Promise((resolve) => setTimeout(resolve, 800));
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (!supabaseUrl || supabaseUrl.includes('your-project-id')) {
+      throw new Error('Supabase no está configurado (valores por defecto).');
+    }
 
-  let results = [...MOCK_PRODUCTS];
+    let query = supabase.from('products').select('*');
 
-  if (filters.category) {
-    results = results.filter((p) => p.category === filters.category);
-  }
-  if (filters.size) {
-    results = results.filter((p) => p.sizes?.includes(filters.size!));
-  }
-  if (filters.color) {
-    results = results.filter((p) => p.colors?.includes(filters.color!));
-  }
+    if (filters.category) {
+      query = query.eq('category', filters.category);
+    }
+    if (filters.size) {
+      query = query.contains('sizes', [filters.size]);
+    }
+    if (filters.color) {
+      query = query.contains('colors', [filters.color]);
+    }
 
-  return results;
+    // Ordenar por fecha de creación descendente
+    query = query.order('created_at', { ascending: false });
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    // Si la base de datos está vacía, mostramos los mock como respaldo
+    if (!data || data.length === 0) {
+      console.warn('[ProductsService] La base de datos está vacía. Usando datos mock de respaldo.');
+      return MOCK_PRODUCTS.filter(p => {
+        if (filters.category && p.category !== filters.category) return false;
+        if (filters.size && !p.sizes?.includes(filters.size)) return false;
+        if (filters.color && !p.colors?.includes(filters.color)) return false;
+        return true;
+      });
+    }
+
+    return data as Product[];
+  } catch (error) {
+    console.warn('[ProductsService] Fallback a datos mock debido a error:', error);
+    let results = [...MOCK_PRODUCTS];
+
+    if (filters.category) {
+      results = results.filter((p) => p.category === filters.category);
+    }
+    if (filters.size) {
+      results = results.filter((p) => p.sizes?.includes(filters.size!));
+    }
+    if (filters.color) {
+      results = results.filter((p) => p.colors?.includes(filters.color!));
+    }
+
+    return results;
+  }
 }
 
 /** Obtener un producto por su ID */
 export async function getProductById(id: string): Promise<Product | null> {
-  await new Promise((resolve) => setTimeout(resolve, 500));
-  return MOCK_PRODUCTS.find((p) => p.id === id) || null;
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (!supabaseUrl || supabaseUrl.includes('your-project-id')) {
+      throw new Error('Supabase no está configurado.');
+    }
+
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (data) return data as Product;
+
+    return MOCK_PRODUCTS.find((p) => p.id === id) || null;
+  } catch (error) {
+    console.warn(`[ProductsService] Fallback a datos mock para ID ${id} debido a error:`, error);
+    return MOCK_PRODUCTS.find((p) => p.id === id) || null;
+  }
 }
 
 /** Crear un nuevo producto */

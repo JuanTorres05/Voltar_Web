@@ -6,13 +6,30 @@ import DesignUploader from '@/frontend/components/previewer/DesignUploader';
 import ShirtPreview from '@/frontend/components/previewer/ShirtPreview';
 import ColorPicker from '@/frontend/components/previewer/ColorPicker';
 import Controls from '@/frontend/components/previewer/Controls';
+import { useCart } from '@/frontend/context/CartContext';
+
+const getColorName = (hex: string): string => {
+  const colorMap: Record<string, string> = {
+    '#FFFFFF': 'Blanco',
+    '#1A1A1A': 'Negro',
+    '#808080': 'Gris',
+    '#1C2841': 'Azul Marino',
+    '#B22222': 'Rojo',
+    '#2E8B57': 'Verde',
+    '#DAA520': 'Amarillo',
+    '#FFB6C1': 'Rosado',
+  };
+  return colorMap[hex] || 'Personalizado';
+};
 
 export default function CustomStudioPage() {
+  const { addItem } = useCart();
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [shirtColor, setShirtColor] = useState<string>('#FFFFFF');
   const [positionX, setPositionX] = useState<number>(50); // 0 a 100
   const [positionY, setPositionY] = useState<number>(30); // 0 a 100
   const [scale, setScale] = useState<number>(100); // 50 a 150
+  const [selectedSize, setSelectedSize] = useState<string>('M');
   
   const previewRef = useRef<HTMLDivElement>(null);
 
@@ -20,6 +37,7 @@ export default function CustomStudioPage() {
     if (!previewRef.current) return;
     
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const html2canvas = (window as any).html2canvas;
       if (!html2canvas) {
         alert('El motor de renderizado aún está cargando. Intenta de nuevo en unos segundos.');
@@ -33,14 +51,21 @@ export default function CustomStudioPage() {
       
       const base64Image = canvas.toDataURL('image/png');
       
-      // Aquí simulamos el envío a Cloudinary
-      console.log('Imagen capturada (Base64):', base64Image.substring(0, 100) + '...');
-      alert('Diseño capturado con éxito. (Revisa la consola para ver el Base64)');
+      // Agregar al carrito con los datos personalizados
+      addItem({
+        product_id: 'custom-drop',
+        name: 'Camiseta Personalizada',
+        price: 45.00,
+        image: base64Image,
+        size: selectedSize,
+        color: getColorName(shirtColor),
+        quantity: 1,
+      });
       
-      // TODO: Enviar base64Image al backend (Supabase / Cloudinary)
+      alert('¡Diseño personalizado agregado al carrito!');
     } catch (error) {
       console.error('Error al exportar el diseño:', error);
-      alert('Hubo un error al generar la vista previa.');
+      alert('Hubo un error al generar la vista previa y agregar al carrito.');
     }
   };
 
@@ -100,6 +125,31 @@ export default function CustomStudioPage() {
               scale={scale} setScale={setScale}
               disabled={!uploadedImage}
             />
+          </div>
+
+          {/* Tallas */}
+          <div className="border border-border bg-surface p-6">
+            <h2 className="mb-4 text-xs font-black uppercase tracking-[0.2em] text-volt">
+              4. Elige tu Talla
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {['S', 'M', 'L', 'XL', 'XXL'].map((size) => {
+                const isSelected = selectedSize === size;
+                return (
+                  <button
+                    key={size}
+                    onClick={() => setSelectedSize(size)}
+                    className={`flex h-12 w-12 items-center justify-center border text-xs font-black uppercase tracking-widest transition-all ${
+                      isSelected 
+                        ? 'border-volt bg-volt text-black' 
+                        : 'border-border bg-background text-foreground hover:border-volt hover:text-volt'
+                    }`}
+                  >
+                    {size}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Exportación */}

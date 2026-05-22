@@ -4,14 +4,116 @@ import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Upload, Plus, X, Check } from 'lucide-react';
 
+const DEMO_PRODUCTS = [
+  {
+    name: 'Oversize "Raw" Tee',
+    description: 'Camiseta oversize de 220gsm. Algodón premium con corte crudo en la parte inferior. Hecha para la calle, no para reglas.',
+    price: 35.00,
+    category: 'Camisetas',
+    images: [
+      'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?q=80&w=800&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=800&auto=format&fit=crop'
+    ],
+    sizes: ['M', 'L', 'XL', 'XXL'],
+    colors: ['Black', 'White'],
+  },
+  {
+    name: 'Volt Cargo Pants',
+    description: 'Pantalones cargo de corte ancho con 6 bolsillos utilitarios. Costuras reforzadas. Ajuste de velcro en tobillos para cambiar la silueta.',
+    price: 68.00,
+    category: 'Pantalones',
+    images: [
+      'https://images.unsplash.com/photo-1554568218-0f1715e72254?q=80&w=800&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1517438476312-10d79c077509?q=80&w=800&auto=format&fit=crop'
+    ],
+    sizes: ['S', 'M', 'L'],
+    colors: ['Black', 'Gray'],
+  },
+  {
+    name: 'Acid Wash Drop',
+    description: 'Tratamiento de lavado ácido intenso. Cada pieza es única. Fit holgado y cuello ancho.',
+    price: 42.00,
+    category: 'Camisetas',
+    images: [
+      'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?q=80&w=800&auto=format&fit=crop'
+    ],
+    sizes: ['M', 'L', 'XL'],
+    colors: ['Gray'],
+  },
+  {
+    name: 'Distressed Beanie',
+    description: 'Gorro beanie corto con detalles rasgados a mano y etiqueta de goma VOLTAR inyectada.',
+    price: 24.00,
+    category: 'Accesorios',
+    images: [
+      'https://images.unsplash.com/photo-1556306535-0f09a537f0a3?q=80&w=800&auto=format&fit=crop'
+    ],
+    sizes: ['One Size'],
+    colors: ['Black', 'Red'],
+  },
+  {
+    name: 'Heavy Puffer Black',
+    description: 'No vas a pasar frío. Puffer ultra pesada color negro mate. Cierres impermeables.',
+    price: 110.00,
+    category: 'Camisetas',
+    images: [
+      'https://images.unsplash.com/photo-1551028719-00167b16eac5?q=80&w=800&auto=format&fit=crop'
+    ],
+    sizes: ['M', 'L'],
+    colors: ['Black'],
+  },
+  {
+    name: 'Street Sneaker V1',
+    description: 'Nuestra primera silueta. Suela chunky, cordones extra gruesos y detalles reflectivos que brillan de noche.',
+    price: 120.00,
+    category: 'Zapatos',
+    images: [
+      'https://images.unsplash.com/photo-1608231387042-66d1773070a5?q=80&w=800&auto=format&fit=crop'
+    ],
+    sizes: ['L', 'XL'],
+    colors: ['Black', 'White', 'Volt'],
+  }
+];
+
 export default function AdminPage() {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading]     = useState(false);
+  const [seeding, setSeeding]     = useState(false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [previews, setPreviews]   = useState<string[]>([]);
   const [error, setError]         = useState<string | null>(null);
   const [success, setSuccess]     = useState(false);
+
+  const handleSeedDemoData = async () => {
+    setSeeding(true);
+    setError(null);
+    setSuccess(false);
+
+    try {
+      const { supabase } = await import('@/backend/lib/supabase/client');
+
+      // Validar si tiene credenciales configuradas
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      if (!supabaseUrl || supabaseUrl.includes('your-project-id')) {
+        throw new Error(
+          'Configura primero credenciales de Supabase válidas en .env.local'
+        );
+      }
+
+      const { error: dbErr } = await supabase.from('products').insert(DEMO_PRODUCTS);
+      if (dbErr) throw dbErr;
+
+      setSuccess(true);
+      setError(null);
+      alert('¡Se sembraron los 6 productos de prueba con éxito!');
+      router.push('/catalog');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error al sembrar datos');
+    } finally {
+      setSeeding(false);
+    }
+  };
 
   const [form, setForm] = useState({
     name:        '',
@@ -42,7 +144,7 @@ export default function AdminPage() {
     try {
       const cloudName    = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
       const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
-      let imageUrls: string[] = [];
+      const imageUrls: string[] = [];
 
       if (imageFiles.length > 0 && cloudName && uploadPreset) {
         for (const file of imageFiles) {
@@ -82,13 +184,25 @@ export default function AdminPage() {
 
       {/* ── Header bar ─────────────────────────────── */}
       <div className="border-b border-border bg-surface px-4 py-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-3xl">
-          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-fg">
-            Panel de administración
-          </p>
-          <h1 className="mt-1 font-display text-5xl tracking-widest text-foreground">
-            NUEVO <span className="text-volt">PRODUCTO</span>
-          </h1>
+        <div className="mx-auto max-w-3xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-fg">
+              Panel de administración
+            </p>
+            <h1 className="mt-1 font-display text-5xl tracking-widest text-foreground">
+              NUEVO <span className="text-volt">PRODUCTO</span>
+            </h1>
+          </div>
+          <div>
+            <button
+              type="button"
+              onClick={handleSeedDemoData}
+              disabled={seeding}
+              className="border border-volt bg-surface hover:bg-volt hover:text-black text-volt px-5 py-2.5 text-xs font-black uppercase tracking-widest transition-all duration-150 active:scale-95 disabled:opacity-50"
+            >
+              {seeding ? 'SEMBRANDO...' : 'SEMBRAR DEMO DATA'}
+            </button>
+          </div>
         </div>
       </div>
 

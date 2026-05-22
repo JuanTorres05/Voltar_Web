@@ -6,9 +6,8 @@
 
 'use server';
 
-import { createProduct, updateProduct, deleteProduct } from '@/backend/services/products.service';
+import { createProduct, deleteProduct } from '@/backend/services/products.service';
 import { revalidatePath } from 'next/cache';
-import { Product } from '@/shared/types';
 
 /** Subir imágenes a Cloudinary desde el servidor */
 async function uploadImages(files: File[]): Promise<string[]> {
