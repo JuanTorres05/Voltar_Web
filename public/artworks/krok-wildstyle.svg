@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" fill="none">
+  <!-- Spray splatter background -->
+  <circle cx="95" cy="110" r="45" fill="#FF0055" opacity="0.35"/>
+  <circle cx="310" cy="260" r="55" fill="#00F0FF" opacity="0.28"/>
+  <circle cx="200" cy="190" r="85" fill="#C8FF00" opacity="0.18"/>
+  <!-- Graffiti Crown -->
+  <path d="M125 115 L145 55 L180 90 L200 40 L220 90 L255 55 L275 115 Z" fill="#C8FF00" stroke="#0A0A0A" stroke-width="8" stroke-linejoin="round"/>
+  <circle cx="145" cy="50" r="8" fill="#FF0055" stroke="#0A0A0A" stroke-width="4"/>
+  <circle cx="200" cy="34" r="9" fill="#00F0FF" stroke="#0A0A0A" stroke-width="4"/>
+  <circle cx="255" cy="50" r="8" fill="#FF0055" stroke="#0A0A0A" stroke-width="4"/>
+  <!-- Wildstyle VOLT block -->
+  <g transform="rotate(-6 200 215)">
+    <rect x="42" y="148" width="316" height="124" rx="8" fill="#0A0A0A" stroke="#C8FF00" stroke-width="6"/>
+    <text x="200" y="232" text-anchor="middle" font-family="Impact, Arial Black, sans-serif" font-size="92" font-weight="900" letter-spacing="6" fill="#C8FF00" stroke="#FF0055" stroke-width="3">VOLT</text>
+  </g>
+  <!-- Paint drips -->
+  <path d="M88 265 L88 320 C88 332 102 332 102 320 L102 265 Z" fill="#C8FF00"/>
+  <path d="M155 268 L155 348 C155 360 169 360 169 348 L169 268 Z" fill="#FF0055"/>
+  <path d="M275 256 L275 305 C275 316 287 316 287 305 L287 256 Z" fill="#00F0FF"/>
+  <!-- Arrows -->
+  <path d="M35 215 L12 195 L35 175" stroke="#00F0FF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M365 215 L388 195 L365 175" stroke="#FF0055" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Splatters -->
+  <circle cx="52" cy="85" r="7" fill="#C8FF00"/>
+  <circle cx="345" cy="105" r="9" fill="#FF0055"/>
+  <circle cx="330" cy="340" r="6" fill="#00F0FF"/>
+  <circle cx="65" cy="340" r="5" fill="#FF0055"/>
+</svg>

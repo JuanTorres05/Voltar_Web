@@ -1,11 +1,23 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { CartItem } from '@/shared/types';
+
+export interface CartToastData {
+  key: number;
+  name: string;
+  image: string;
+  size?: string;
+  color?: string;
+  price: number;
+  quantity: number;
+}
 
 interface CartContextType {
   items: CartItem[];
   isOpen: boolean;
+  toast: CartToastData | null;
+  dismissToast: () => void;
   openCart: () => void;
   closeCart: () => void;
   addItem: (item: Omit<CartItem, 'id'>) => void;
@@ -22,6 +34,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [toast, setToast] = useState<CartToastData | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Cargar desde LocalStorage al iniciar
   useEffect(() => {
@@ -34,6 +48,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Error leyendo carrito del localStorage', error);
     }
+
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    };
   }, []);
 
   // Guardar en LocalStorage al cambiar items
@@ -45,6 +63,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const openCart = () => setIsOpen(true);
   const closeCart = () => setIsOpen(false);
+  const dismissToast = () => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast(null);
+  };
 
   const addItem = (item: Omit<CartItem, 'id'>) => {
     const uniqueId = `${item.product_id}-${item.size || 'no-size'}-${item.color || 'no-color'}`;
@@ -52,12 +74,27 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setItems((prev) => {
       const existing = prev.find((i) => i.id === uniqueId);
       if (existing) {
-        return prev.map((i) => 
+        return prev.map((i) =>
           i.id === uniqueId ? { ...i, quantity: i.quantity + item.quantity } : i
         );
       }
       return [...prev, { ...item, id: uniqueId }];
     });
+
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast({
+      key: Date.now(),
+      name: item.name,
+      image: item.image,
+      size: item.size,
+      color: item.color,
+      price: item.price,
+      quantity: item.quantity,
+    });
+    toastTimerRef.current = setTimeout(() => {
+      setToast(null);
+    }, 3500);
+
     openCart();
   };
 
@@ -67,19 +104,22 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const updateQuantity = (id: string, quantity: number) => {
     if (quantity < 1) return;
-    setItems((prev) => prev.map((i) => i.id === id ? { ...i, quantity } : i));
+    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, quantity } : i)));
   };
 
   const clearCart = () => setItems([]);
 
   const getTotalItems = () => items.reduce((acc, item) => acc + item.quantity, 0);
-  const getTotalPrice = () => items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const getTotalPrice = () =>
+    items.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
   return (
     <CartContext.Provider
       value={{
         items,
         isOpen,
+        toast,
+        dismissToast,
         openCart,
         closeCart,
         addItem,

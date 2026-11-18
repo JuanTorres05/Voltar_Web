@@ -1,230 +1,559 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
 import Image from 'next/image';
+import { motion, useScroll, useTransform } from 'motion/react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { MOCK_ARTWORKS } from '@/shared/data/artists.mock';
+import { CUSTOM_PIECES_SHOWCASE } from '@/shared/data/custom-pieces.mock';
+import VoltarLogo from '@/frontend/components/ui/VoltarLogo';
+
+gsap.registerPlugin(ScrollTrigger);
+
+const EASE_OUT = 'easeOut' as const;
+
+const cellReveal = {
+  hidden: { opacity: 0, y: 24 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.45, ease: EASE_OUT },
+  },
+};
+
+const gridStagger = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.08, delayChildren: 0.05 } },
+};
 
 const DROPS = [
-  { slug: 'Camisetas',  label: 'CAMISETAS',  sub: 'Oversize · Cropped',        tag: 'NEW DROP',   img: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?q=80&w=800&auto=format&fit=crop' },
-  { slug: 'Pantalones', label: 'PANTALONES', sub: 'Cargo · Jogger · Street',   tag: 'BESTSELLER', img: 'https://images.unsplash.com/photo-1554568218-0f1715e72254?q=80&w=800&auto=format&fit=crop' },
-  { slug: 'Accesorios', label: 'ACCESORIOS', sub: 'Gorras · Complementos',     tag: null,         img: 'https://images.unsplash.com/photo-1556306535-0f09a537f0a3?q=80&w=800&auto=format&fit=crop' },
-  { slug: 'Zapatos',    label: 'ZAPATOS',    sub: 'Kicks que marcan',          tag: 'PRONTO',     img: 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?q=80&w=800&auto=format&fit=crop' },
+  { code: '01', slug: 'Camisetas',  label: 'CAMISETAS',  spec: '220GSM // BOXY FIT',   tag: '[ DROP-01 ]', img: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?q=80&w=800&auto=format&fit=crop' },
+  { code: '02', slug: 'Pantalones', label: 'PANTALONES', spec: 'RIPSTOP // 6 POCKETS', tag: '[ DROP-02 ]', img: 'https://images.unsplash.com/photo-1554568218-0f1715e72254?q=80&w=800&auto=format&fit=crop' },
+  { code: '03', slug: 'Accesorios', label: 'ACCESORIOS', spec: 'HEADWEAR // HARDWARE', tag: '[ DROP-03 ]', img: 'https://images.unsplash.com/photo-1556306535-0f09a537f0a3?q=80&w=800&auto=format&fit=crop' },
+  { code: '04', slug: 'Zapatos',    label: 'ZAPATOS',    spec: 'CHUNKY // PROTO-V1',   tag: '[ PRONTO ]',  img: 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?q=80&w=800&auto=format&fit=crop' },
 ];
 
-const MANIFESTO = [
-  'SIN LÍMITES',
-  'ROMPE ESQUEMAS',
-  'ENERGY',
-  'STREET',
-  'YOUTH',
-  'VOLTAR',
+const TELEMETRY_TICKER = [
+  'ARCHIVO URBANO VØLTAR®',
+  'SECTOR: STREETWEAR & GALERÍA',
+  'SERIGRAFÍA 300DPI',
+  'ALGODÓN 220GSM',
+  'ARTISTAS EMERGENTES',
+  'CUSTOM LAB ACTIVO',
 ];
 
 export default function HomePage() {
+  const heroRef = useRef<HTMLElement>(null);
+  const customBannerRef = useRef<HTMLElement>(null);
+
+  const { scrollYProgress: heroScroll } = useScroll({
+    target: heroRef,
+    offset: ['start start', 'end start'],
+  });
+
+  const specimenY = useTransform(heroScroll, [0, 1], [0, 50]);
+  const titleY = useTransform(heroScroll, [0, 1], [0, -35]);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      // Hero entrance stagger
+      gsap.from('.hero-anim', {
+        opacity: 0,
+        y: 36,
+        duration: 0.75,
+        stagger: 0.1,
+        ease: 'expo.out',
+        clearProps: 'transform',
+      });
+
+      // Custom Lab headline skew-wipe on scroll
+      if (customBannerRef.current) {
+        gsap.from('.custom-banner-anim', {
+          opacity: 0,
+          y: 50,
+          skewY: 2,
+          duration: 0.85,
+          stagger: 0.12,
+          ease: 'expo.out',
+          scrollTrigger: {
+            trigger: customBannerRef.current,
+            start: 'top 80%',
+            once: true,
+          },
+        });
+      }
+    });
+
+    return () => ctx.revert();
+  }, []);
+
+  const [artworkPage, setArtworkPage] = useState(0);
+  const ITEMS_PER_PAGE = 4;
+  const totalArtworkPages = Math.ceil(MOCK_ARTWORKS.length / ITEMS_PER_PAGE);
+  const visibleArtworks = MOCK_ARTWORKS.slice(
+    artworkPage * ITEMS_PER_PAGE,
+    artworkPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
+  );
+
+  const handlePrevArtworks = () => {
+    setArtworkPage((prev) => (prev === 0 ? totalArtworkPages - 1 : prev - 1));
+  };
+
+  const handleNextArtworks = () => {
+    setArtworkPage((prev) => (prev + 1) % totalArtworkPages);
+  };
+
   return (
     <div className="bg-background text-foreground">
 
-      {/* ── HERO ──────────────────────────────────────────────── */}
-      <section className="relative flex min-h-[85vh] flex-col items-center justify-center overflow-hidden px-4 py-16 text-center">
-
-        {/* Volt stripe grid background */}
-        <div className="pointer-events-none absolute inset-0 volt-grid opacity-70" />
-
-        {/* Glow blob */}
-        <div
-          className="pointer-events-none absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(200,255,0,0.08) 0%, transparent 60%)' }}
-        />
-
-        <div className="relative z-10 flex flex-col items-center">
-          {/* Pre-title */}
-          <div className="mb-4 animate-fade-up">
-            <span className="tag-volt">Nueva colección 2025</span>
-          </div>
-
-          {/* Main heading */}
-          <h1 className="font-display text-[22vw] leading-[0.85] tracking-wide text-foreground sm:text-[18vw] lg:text-[15vw] animate-fade-up delay-100">
-            VOLT<span className="text-volt">AR</span>
-          </h1>
-
-          {/* Sub tagline */}
-          <p className="mt-6 max-w-xl text-lg font-medium uppercase tracking-widest text-muted-fg animate-fade-up delay-200">
-            Moda urbana para los que{' '}
-            <span className="text-volt font-bold">rompen esquemas</span>
-          </p>
-
-          {/* CTAs */}
-          <div className="mt-10 flex flex-col gap-4 sm:flex-row animate-fade-up delay-300">
-            <Link
-              href="/catalog"
-              className="group flex items-center justify-center gap-3 bg-volt px-10 py-4 text-sm font-black uppercase tracking-widest text-black transition-all duration-150 hover:-translate-y-1 hover:shadow-volt"
-            >
-              Ver colección
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </Link>
-            <Link
-              href="/catalog?category=Camisetas"
-              className="flex items-center justify-center border border-border-strong bg-surface px-10 py-4 text-sm font-black uppercase tracking-widest text-foreground transition-all hover:border-volt hover:text-volt"
-            >
-              Camisetas
-            </Link>
+      {/* ── HERO: BLUEPRINT TERMINAL ──────────────────────────── */}
+      <section
+        ref={heroRef}
+        className="relative overflow-hidden border-b border-border-strong bg-background volt-grid"
+      >
+        {/* Top Metadata Strip */}
+        <div className="border-b border-border bg-surface px-4 py-2 sm:px-6 lg:px-8">
+          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 font-mono text-[10px] uppercase tracking-[0.1em] text-muted-fg">
+            <span>[ REF // VLT-001-ARCHIVE ]</span>
+            <span>DIVISIÓN: GALERÍA URBANA &amp; INDUMENTARIA</span>
+            <span className="text-volt">[ STATUS: OPERATIVO ]</span>
           </div>
         </div>
 
-        {/* Scroll indicator */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-fade-up delay-400">
-          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-fg">Scroll</span>
-          <div className="h-12 w-[1px] bg-gradient-to-b from-volt to-transparent" />
+        {/* Main Blueprint Grid */}
+        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-20">
+          <div className="grid grid-cols-1 gap-px border border-border-strong bg-border-strong lg:grid-cols-12">
+
+            {/* Left 8 cols: Macro-Typography */}
+            <div className="relative flex flex-col justify-between bg-background p-6 sm:p-10 lg:col-span-8">
+              <span className="pointer-events-none absolute left-2 top-1 font-mono text-xs text-muted-fg">+</span>
+              <span className="pointer-events-none absolute right-2 top-1 font-mono text-xs text-muted-fg">+</span>
+
+              <motion.div style={{ y: titleY }}>
+                <div className="hero-anim mb-6 flex flex-wrap items-center gap-3">
+                  <span className="tag-volt">UNIT // 2025</span>
+                  <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted-fg">
+                    &lt; INDUSTRIAL STREETWEAR &gt;
+                  </span>
+                </div>
+
+                <h1
+                  className="hero-anim inline-flex items-start whitespace-nowrap font-display uppercase tracking-[-0.05em] text-foreground"
+                  style={{ fontSize: 'clamp(3.4rem, 9vw, 8rem)', lineHeight: 0.85 }}
+                >
+                  <span>
+                    VØLT<span className="text-volt">AR</span>
+                  </span>
+                  <span className="ml-1.5 mt-1 font-mono text-[0.16em] font-bold leading-none tracking-normal text-muted-fg">
+                    ®
+                  </span>
+                </h1>
+
+                <p className="hero-anim mt-6 max-w-xl font-mono text-xs uppercase leading-relaxed tracking-[0.08em] text-muted-fg sm:text-sm">
+                  PLATAFORMA DE MODA URBANA Y EXHIBICIÓN DE ARTISTAS CALLEJEROS.
+                  SELECCIONA UNA OBRA DEL ARCHIVO Y ESTÁMPALA EN TEXTIL PESADO.
+                </p>
+              </motion.div>
+
+              {/* Action Bar */}
+              <div className="hero-anim mt-10 grid grid-cols-1 gap-px border border-border-strong bg-border-strong sm:grid-cols-3">
+                <motion.div whileTap={{ scale: 0.98 }}>
+                  <Link
+                    href="/artists"
+                    className="flex items-center justify-between bg-volt px-5 py-4 font-mono text-xs font-extrabold uppercase tracking-[0.08em] text-white transition-colors hover:bg-foreground hover:text-background"
+                  >
+                    <span>[ GALERÍA ]</span>
+                    <span>&gt;&gt;&gt;</span>
+                  </Link>
+                </motion.div>
+                <motion.div whileTap={{ scale: 0.98 }}>
+                  <Link
+                    href="/custom"
+                    className="flex items-center justify-between bg-surface px-5 py-4 font-mono text-xs font-extrabold uppercase tracking-[0.08em] text-foreground transition-colors hover:bg-volt hover:text-white"
+                  >
+                    <span>[ CUSTOM LAB ]</span>
+                    <span>+</span>
+                  </Link>
+                </motion.div>
+                <motion.div whileTap={{ scale: 0.98 }}>
+                  <Link
+                    href="/catalog"
+                    className="flex items-center justify-between bg-background px-5 py-4 font-mono text-xs font-extrabold uppercase tracking-[0.08em] text-muted-fg transition-colors hover:bg-surface hover:text-foreground"
+                  >
+                    <span>[ TIENDA ]</span>
+                    <span>///</span>
+                  </Link>
+                </motion.div>
+              </div>
+            </div>
+
+            {/* Right 4 cols: Official Specimen Box */}
+            <div className="hero-anim flex flex-col justify-between bg-surface p-6 sm:p-8 lg:col-span-4">
+              <div className="flex items-center justify-between border-b border-border pb-3 font-mono text-[10px] uppercase tracking-[0.1em] text-muted-fg">
+                <span>SPECIMEN // 00</span>
+                <span className="text-volt">EMBLEMA OFICIAL</span>
+              </div>
+
+              <motion.div
+                style={{ y: specimenY }}
+                className="my-8 flex flex-col items-center justify-center"
+              >
+                <VoltarLogo size="hero" />
+                <div className="mt-4 barcode-strip h-4 w-40 opacity-80" />
+              </motion.div>
+
+              <dl className="grid grid-cols-2 gap-px border border-border bg-border font-mono text-[10px] uppercase">
+                <div className="bg-background p-2.5">
+                  <dt className="text-muted-fg">GRAMAJE</dt>
+                  <dd className="mt-0.5 font-bold text-foreground">220 GSM</dd>
+                </div>
+                <div className="bg-background p-2.5">
+                  <dt className="text-muted-fg">IMPRESIÓN</dt>
+                  <dd className="mt-0.5 font-bold text-foreground">DTG / 300DPI</dd>
+                </div>
+                <div className="bg-background p-2.5">
+                  <dt className="text-muted-fg">ARTISTAS</dt>
+                  <dd className="mt-0.5 font-bold text-volt">ACTIVOS</dd>
+                </div>
+                <div className="bg-background p-2.5">
+                  <dt className="text-muted-fg">ORIGEN</dt>
+                  <dd className="mt-0.5 font-bold text-foreground">LATAM CREW</dd>
+                </div>
+              </dl>
+            </div>
+
+          </div>
         </div>
+
+        {/* Hazard Strip Divider */}
+        <div className="hazard-stripes h-3 w-full border-t border-border-strong" />
       </section>
 
-      {/* ── MARQUEE MANIFESTO ────────────────────────────────── */}
-      <div className="overflow-hidden border-y border-border bg-surface py-5">
+      {/* ── TELEMETRY MARQUEE ─────────────────────────────────── */}
+      <div className="overflow-hidden border-b border-border-strong bg-surface py-3">
         <div className="flex animate-marquee whitespace-nowrap">
-          {Array.from({ length: 3 }).map((_, i) =>
-            MANIFESTO.map((word) => (
-              <span key={`${i}-${word}`} className="mx-8 font-display text-3xl tracking-widest text-muted-fg">
-                {word}
-                <span className="ml-8 text-volt">·</span>
+          {Array.from({ length: 4 }).map((_, i) =>
+            TELEMETRY_TICKER.map((item) => (
+              <span
+                key={`${i}-${item}`}
+                className="mx-6 font-mono text-xs font-bold uppercase tracking-[0.15em] text-foreground"
+              >
+                {item} <span className="ml-6 text-volt">///</span>
               </span>
             ))
           )}
         </div>
       </div>
 
-      {/* ── CUSTOM STUDIO BANNER ───────────────────────────────── */}
-      <section className="border-b border-border bg-black text-center relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10 bg-[url('https://images.unsplash.com/photo-1620799139507-2a76f79a2f4d?q=80&w=1200&auto=format&fit=crop')] bg-cover bg-center pointer-events-none" />
-        <div className="relative z-10 mx-auto max-w-5xl px-4 py-20 sm:px-6 lg:px-8">
-          <span className="tag-volt mb-6 inline-block">NUEVA EXPERIENCIA</span>
-          <h2 className="font-display text-5xl text-white sm:text-7xl lg:text-8xl uppercase">
-            Crea tu propio <span className="text-volt">Drop</span>
-          </h2>
-          <p className="mx-auto mt-6 max-w-2xl text-base font-medium text-muted-fg">
-            No te conformes con lo que hay. Entra al Custom Studio, sube tu arte y diseña tu propia pieza única. Tú pones las reglas.
-          </p>
-          <Link
-            href="/custom"
-            className="mt-10 inline-flex items-center gap-3 border-2 border-volt bg-volt px-10 py-4 text-sm font-black uppercase tracking-widest text-black transition-all hover:bg-black hover:text-volt hover:-translate-y-1"
-          >
-            Entrar al Custom Studio
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-      </section>
-
-      {/* ── DROPS / CATEGORÍAS ──────────────────────────────── */}
-      <section className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
-        <div className="mb-12 flex items-end justify-between border-b border-border pb-6">
-          <h2 className="font-display text-6xl text-foreground sm:text-7xl">
-            DROPS
-          </h2>
-          <Link
-            href="/catalog"
-            className="text-xs font-black uppercase tracking-widest text-volt hover:text-foreground transition-colors"
-          >
-            Ver todo →
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {DROPS.map(({ slug, label, sub, tag, img }) => (
-            <Link
-              key={slug}
-              href={`/catalog?category=${slug}`}
-              className="group relative flex flex-col justify-end overflow-hidden border border-border bg-surface p-6 transition-all duration-300 hover:border-volt hover:-translate-y-1"
-              style={{ minHeight: '380px' }}
+      {/* ── GALERÍA URBANA: COMPARTMENTALIZED GRID ────────────── */}
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: '-60px' }}
+          variants={cellReveal}
+          className="mb-8 flex flex-col justify-between gap-4 border-b border-border-strong pb-5 sm:flex-row sm:items-end"
+        >
+          <div>
+            <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-volt">
+              [ ARCHIVO DE OBRAS ESTAMPABLES // REV 2.6 ]
+            </p>
+            <h2
+              className="mt-2 font-display uppercase tracking-[-0.04em] text-foreground"
+              style={{ fontSize: 'clamp(2.8rem, 6vw, 5rem)', lineHeight: 0.9 }}
             >
-              {/* Background Image */}
-              <Image 
-                src={img} 
-                alt={label} 
-                fill 
-                className="object-cover object-center opacity-40 transition-transform duration-700 group-hover:scale-110 group-hover:opacity-60"
-                unoptimized
-              />
-
-              {/* Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
-
-              {/* Content */}
-              <div className="relative z-10">
-                {tag && (
-                  <span className="tag-volt mb-4 inline-block">{tag}</span>
-                )}
-                <h3 className="font-display text-5xl text-foreground transition-colors duration-150 group-hover:text-volt">
-                  {label}
-                </h3>
-                <p className="mt-1 text-xs font-bold uppercase tracking-widest text-muted-fg">{sub}</p>
-                <div className="mt-5 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-fg transition-colors group-hover:text-volt">
-                  Explorar
-                  <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* ── MANIFIESTO ──────────────────────────────────────── */}
-      <section className="border-y border-border bg-surface px-4 py-24 text-center">
-        <div className="mx-auto max-w-4xl">
-          <h2 className="font-display text-6xl text-foreground sm:text-7xl lg:text-8xl">
-            NO SOMOS <span className="text-volt">UNA MARCA.</span><br />
-            SOMOS UN<br />
-            <span className="text-gradient-volt">MOVIMIENTO.</span>
-          </h2>
-          <p className="mx-auto mt-8 max-w-xl text-base font-medium leading-relaxed text-muted-fg">
-            Voltar nació para los que se cansan de lo mismo. Para la juventud que tiene energía de sobra y ganas de romper todo lo que le dijeron que no podía. Sin límites. Sin reglas. Sin miedo.
-          </p>
-          <Link
-            href="/catalog"
-            className="mt-10 inline-flex items-center gap-3 bg-volt px-10 py-4 text-sm font-black uppercase tracking-widest text-black transition-all hover:-translate-y-1 hover:shadow-volt"
-          >
-            Únete al movimiento
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-      </section>
-
-      {/* ── STATS ───────────────────────────────────────────── */}
-      <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
-          {[
-            { value: '+500',  label: 'Productos' },
-            { value: '+2K',   label: 'Guerreros Voltar' },
-            { value: '100%',  label: 'Sin límites' },
-            { value: '4.9★',  label: 'Rating' },
-          ].map(({ value, label }) => (
-            <div key={label} className="border-l-2 border-volt pl-5">
-              <p className="font-display text-5xl text-volt sm:text-6xl">{value}</p>
-              <p className="mt-1 text-xs font-bold uppercase tracking-widest text-muted-fg">{label}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── CTA FINAL ───────────────────────────────────────── */}
-      <section className="overflow-hidden border-t border-border bg-volt px-4 py-16 text-center">
-        <div className="relative">
-          {/* Big background text */}
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden">
-            <span className="font-display text-[20vw] font-black text-black/10 leading-none">VOLTAR</span>
+              MURO DE ARTISTAS
+            </h2>
           </div>
-          <h2 className="relative font-display text-5xl text-black sm:text-6xl lg:text-7xl">
-            ¿LISTO PARA EL DROP?
-          </h2>
-          <p className="relative mx-auto mt-4 max-w-lg text-base font-semibold text-black/70">
-            Envío gratis en tu primer pedido. Sin excusas.
-          </p>
           <Link
-            href="/catalog"
-            className="relative mt-8 inline-flex items-center gap-3 border-2 border-black bg-black px-10 py-4 text-sm font-black uppercase tracking-widest text-volt transition-all hover:-translate-y-1"
+            href="/artists"
+            className="border border-border-strong bg-surface px-4 py-2.5 font-mono text-xs font-bold uppercase tracking-[0.1em] text-foreground transition-colors hover:border-volt hover:bg-volt hover:text-white"
           >
-            Entrar al catálogo
-            <ArrowRight className="h-4 w-4" />
+            [ VER ARCHIVO COMPLETO &gt;&gt;&gt; ]
           </Link>
+        </motion.div>
+
+        {/* Carrusel con una flecha a cada lado de los 4 artistas */}
+        <div className="relative flex items-stretch">
+          {/* Flecha izquierda */}
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={handlePrevArtworks}
+            aria-label="Artistas anteriores"
+            className="absolute left-2 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center border border-border-strong bg-background/95 text-foreground transition-colors hover:border-volt hover:bg-volt hover:text-white lg:static lg:h-auto lg:w-12 lg:shrink-0 lg:translate-y-0 lg:border-r-0 lg:bg-surface"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </motion.button>
+
+          {/* Blueprint 1px-gap grid with stagger */}
+          <motion.div
+            key={artworkPage}
+            initial="hidden"
+            animate="show"
+            variants={gridStagger}
+            className="grid flex-1 grid-cols-1 gap-px border border-border-strong bg-border-strong sm:grid-cols-2 lg:grid-cols-4"
+          >
+          {visibleArtworks.map((work, idx) => (
+            <motion.article
+              key={work.id}
+              variants={cellReveal}
+              className="group flex flex-col justify-between bg-background transition-colors hover:bg-surface"
+            >
+              {/* Header metadata */}
+              <div className="flex items-center justify-between border-b border-border px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.08em]">
+                <span className="text-muted-fg">
+                  UNIT // {String(artworkPage * ITEMS_PER_PAGE + idx + 1).padStart(2, '0')}
+                </span>
+                <span className="text-volt">[{work.style}]</span>
+              </div>
+
+              {/* Artwork preview */}
+              <div className="relative aspect-square overflow-hidden border-b border-border bg-card">
+                <span className="pointer-events-none absolute left-2 top-1 z-10 font-mono text-[10px] text-white/70">+</span>
+                <span className="pointer-events-none absolute right-2 top-1 z-10 font-mono text-[10px] text-white/70">+</span>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={work.image_url}
+                  alt={work.title}
+                  className="h-full w-full object-cover grayscale contrast-125 transition-all duration-300 group-hover:scale-105 group-hover:grayscale-0"
+                />
+              </div>
+
+              {/* Footer info & CTA */}
+              <div className="flex flex-1 flex-col justify-between p-4">
+                <div>
+                  <p className="font-mono text-[10px] uppercase tracking-[0.1em] text-muted-fg">
+                    ARTISTA: <span className="text-foreground">{work.artist_tag}</span>
+                  </p>
+                  <h3 className="mt-1.5 font-display text-2xl tracking-[-0.03em] text-foreground group-hover:text-volt">
+                    {work.title}
+                  </h3>
+                </div>
+
+                <Link
+                  href={`/custom?art=${encodeURIComponent(work.image_url)}&artist=${encodeURIComponent(
+                    work.artist_tag
+                  )}&title=${encodeURIComponent(work.title)}`}
+                  className="mt-5 flex items-center justify-between border border-border-strong bg-surface px-3 py-2.5 font-mono text-[11px] font-bold uppercase tracking-[0.08em] text-foreground transition-colors hover:border-volt hover:bg-volt hover:text-white"
+                >
+                  <span>[ ESTAMPAR ]</span>
+                  <span>&gt;&gt;&gt;</span>
+                </Link>
+              </div>
+            </motion.article>
+          ))}
+          </motion.div>
+
+          {/* Flecha derecha */}
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={handleNextArtworks}
+            aria-label="Siguientes artistas"
+            className="absolute right-2 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center border border-border-strong bg-background/95 text-foreground transition-colors hover:border-volt hover:bg-volt hover:text-white lg:static lg:h-auto lg:w-12 lg:shrink-0 lg:translate-y-0 lg:border-l-0 lg:bg-surface"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </motion.button>
         </div>
       </section>
 
+      {/* ── CUSTOM LAB TERMINAL BANNER ────────────────────────── */}
+      <section ref={customBannerRef} className="border-y border-border-strong bg-surface">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 gap-px border border-border-strong bg-border-strong lg:grid-cols-12">
+            <div className="bg-background p-8 lg:col-span-8 lg:p-12">
+              <span className="custom-banner-anim tag-volt mb-4 inline-block">
+                [ MÓDULO // CUSTOM LAB ]
+              </span>
+              <h2
+                className="custom-banner-anim font-display uppercase tracking-[-0.04em] text-foreground"
+                style={{ fontSize: 'clamp(3rem, 7vw, 6rem)', lineHeight: 0.88 }}
+              >
+                TU DISEÑO EN <span className="text-volt">ALTO GRAMAJE</span>
+              </h2>
+              <p className="custom-banner-anim mt-5 max-w-xl font-mono text-xs uppercase leading-relaxed tracking-wider text-muted-fg">
+                CARGA UNA OBRA DE LA GALERÍA O SUBE TU PROPIO ARCHIVO PNG.
+                AJUSTA COORDENADAS X/Y, ESCALA Y COLOR BASE EN TIEMPO REAL.
+              </p>
+            </div>
+
+            <div className="custom-banner-anim flex flex-col justify-between bg-card p-8 lg:col-span-4">
+              <dl className="space-y-3 font-mono text-xs uppercase">
+                <div className="flex justify-between border-b border-border pb-2">
+                  <dt className="text-muted-fg">FORMATO:</dt>
+                  <dd className="font-bold text-foreground">PNG / SVG</dd>
+                </div>
+                <div className="flex justify-between border-b border-border pb-2">
+                  <dt className="text-muted-fg">PRECIO BASE:</dt>
+                  <dd className="font-bold text-foreground">$45.00 USD</dd>
+                </div>
+                <div className="flex justify-between border-b border-border pb-2">
+                  <dt className="text-muted-fg">REGALÍA ARTISTA:</dt>
+                  <dd className="font-bold text-volt">+$5.00 USD</dd>
+                </div>
+              </dl>
+
+              <motion.div whileTap={{ scale: 0.98 }}>
+                <Link
+                  href="/custom"
+                  className="mt-8 flex items-center justify-between bg-volt px-6 py-4 font-mono text-xs font-extrabold uppercase tracking-[0.1em] text-white transition-colors hover:bg-foreground hover:text-background"
+                >
+                  <span>[ ABRIR CUSTOM LAB ]</span>
+                  <span>&gt;&gt;&gt;</span>
+                </Link>
+              </motion.div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── DROPS / CATEGORÍAS DE TIENDA ──────────────────────── */}
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: '-60px' }}
+          variants={cellReveal}
+          className="mb-8 flex items-end justify-between border-b border-border-strong pb-5"
+        >
+          <div>
+            <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-volt">
+              [ INVENTARIO // CATÁLOGO BASE ]
+            </p>
+            <h2
+              className="mt-2 font-display uppercase tracking-[-0.04em] text-foreground"
+              style={{ fontSize: 'clamp(2.8rem, 6vw, 5rem)', lineHeight: 0.9 }}
+            >
+              DROPS OFICIALES
+            </h2>
+          </div>
+          <Link
+            href="/catalog"
+            className="font-mono text-xs font-bold uppercase tracking-[0.1em] text-volt hover:underline"
+          >
+            [ VER TODO &gt;&gt;&gt; ]
+          </Link>
+        </motion.div>
+
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: '-60px' }}
+          variants={gridStagger}
+          className="grid grid-cols-1 gap-px border border-border-strong bg-border-strong sm:grid-cols-2 lg:grid-cols-4"
+        >
+          {DROPS.map(({ code, slug, label, spec, tag, img }) => (
+            <motion.div key={slug} variants={cellReveal}>
+              <Link
+                href={`/catalog?category=${slug}`}
+                className="group relative flex min-h-[380px] flex-col justify-between overflow-hidden bg-background p-6 transition-colors hover:bg-surface"
+              >
+                <Image
+                  src={img}
+                  alt={label}
+                  fill
+                  className="object-cover object-center opacity-35 grayscale contrast-125 transition-all duration-300 group-hover:scale-105 group-hover:opacity-55 group-hover:grayscale-0"
+                  unoptimized
+                />
+
+                <div className="relative z-10 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.1em]">
+                  <span className="bg-background/90 px-2 py-1 text-foreground">{tag}</span>
+                  <span className="font-display text-3xl text-volt">{code}</span>
+                </div>
+
+                <div className="relative z-10 border-t border-border-strong bg-background/90 p-4">
+                  <h3 className="font-display text-4xl tracking-[-0.03em] text-foreground group-hover:text-volt">
+                    {label}
+                  </h3>
+                  <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.1em] text-muted-fg">
+                    {spec}
+                  </p>
+                </div>
+              </Link>
+            </motion.div>
+          ))}
+        </motion.div>
+      </section>
+
+      {/* ── PIEZAS PERSONALIZADAS (ARCHIVO DE PRODUCCIÓN) ─────── */}
+      <section className="border-t border-border-strong bg-surface">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+          <motion.div
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: '-60px' }}
+            variants={cellReveal}
+            className="mb-8 flex flex-col justify-between gap-4 border-b border-border-strong pb-5 sm:flex-row sm:items-end"
+          >
+            <div>
+              <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-volt">
+                [ ARCHIVO DE TALLER // PRENDAS ENTREGADAS ]
+              </p>
+              <h2
+                className="mt-2 font-display uppercase tracking-[-0.04em] text-foreground"
+                style={{ fontSize: 'clamp(2.8rem, 6vw, 5rem)', lineHeight: 0.9 }}
+              >
+                PIEZAS PERSONALIZADAS
+              </h2>
+            </div>
+            <Link
+              href="/custom"
+              className="border border-border-strong bg-background px-4 py-2.5 font-mono text-xs font-bold uppercase tracking-[0.1em] text-foreground transition-colors hover:border-volt hover:bg-volt hover:text-white"
+            >
+              [ CREA LA TUYA EN CUSTOM LAB &gt;&gt;&gt; ]
+            </Link>
+          </motion.div>
+
+          <motion.div
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: '-40px' }}
+            variants={gridStagger}
+            className="grid grid-cols-1 gap-px border border-border-strong bg-border-strong sm:grid-cols-2 lg:grid-cols-4"
+          >
+            {CUSTOM_PIECES_SHOWCASE.map((piece) => (
+              <motion.article
+                key={piece.id}
+                variants={cellReveal}
+                className="group flex flex-col justify-between bg-background transition-colors hover:bg-card"
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between border-b border-border px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.08em]">
+                  <span className="text-muted-fg">[{piece.code}]</span>
+                  <span className="text-volt">{piece.technique}</span>
+                </div>
+
+                {/* Garment photo */}
+                <div className="relative aspect-[4/5] overflow-hidden border-b border-border bg-card">
+                  <span className="pointer-events-none absolute left-2 top-1 z-10 font-mono text-[10px] text-white/70">+</span>
+                  <span className="pointer-events-none absolute right-2 top-1 z-10 font-mono text-[10px] text-white/70">+</span>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={piece.image_url}
+                    alt={piece.title}
+                    className="h-full w-full object-cover grayscale contrast-125 transition-all duration-300 group-hover:scale-105 group-hover:grayscale-0"
+                  />
+                </div>
+
+                {/* Specs */}
+                <div className="p-4">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-muted-fg">
+                    ARTE: <span className="text-foreground">{piece.artist_credit}</span>
+                  </p>
+                  <h3 className="mt-1 font-display text-2xl tracking-[-0.03em] text-foreground group-hover:text-volt">
+                    {piece.title}
+                  </h3>
+                  <p className="mt-2 border-t border-border pt-2 font-mono text-[10px] uppercase tracking-[0.08em] text-muted-fg">
+                    {piece.garment}
+                  </p>
+                </div>
+              </motion.article>
+            ))}
+          </motion.div>
+        </div>
+      </section>
     </div>
   );
 }

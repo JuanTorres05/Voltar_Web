@@ -2,16 +2,17 @@
 
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { ShoppingBag, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { useState, useEffect, Suspense } from 'react';
 import { useCart } from '@/frontend/context/CartContext';
+import VoltarLogo from '@/frontend/components/ui/VoltarLogo';
+import GlobalSearch from '@/frontend/components/ui/GlobalSearch';
 
 const NAV_LINKS = [
-  { href: '/catalog',                       label: 'Todo',       isExact: true },
-  { href: '/catalog?category=Camisetas',    label: 'Camisetas',  cat: 'Camisetas' },
-  { href: '/catalog?category=Pantalones',   label: 'Pantalones', cat: 'Pantalones' },
-  { href: '/catalog?category=Accesorios',   label: 'Accesorios', cat: 'Accesorios' },
-  { href: '/custom',                        label: 'CUSTOM STUDIO', isExact: true },
+  { href: '/catalog',                    label: '[ DROPS ]',      matchPath: '/catalog', exact: true },
+  { href: '/artists',                    label: '[ GALERÍA ]',    matchPath: '/artists' },
+  { href: '/catalog?category=Camisetas', label: '[ CAMISETAS ]',  cat: 'Camisetas' },
+  { href: '/custom',                     label: '[ CUSTOM LAB ]', matchPath: '/custom', isAccent: true },
 ];
 
 function NavbarContent() {
@@ -19,119 +20,143 @@ function NavbarContent() {
   const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
   const currentCategory = searchParams.get('category');
-  
+
   const { openCart, getTotalItems } = useCart();
   const [mounted, setMounted] = useState(false);
 
-  // Cerrar menú móvil al cambiar de ruta
   useEffect(() => {
     setOpen(false);
   }, [pathname, searchParams]);
 
-  // Evitar hydration mismatch para el número de items
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-surface/95 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+  const itemCount = mounted ? String(getTotalItems()).padStart(2, '0') : '00';
 
-        {/* Logo */}
-        <Link href="/" className="group flex items-center gap-0">
-          <span className="font-display text-4xl tracking-widest text-foreground transition-colors duration-150 group-hover:text-volt">
-            VOLT
-          </span>
-          <span className="font-display text-4xl tracking-widest text-volt">AR</span>
+  return (
+    <header className="sticky top-0 z-40 w-full border-b border-border-strong bg-background">
+      {/* Top telemetry bar */}
+      <div className="hidden border-b border-border bg-surface px-4 py-1 sm:block sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl items-center justify-between font-mono text-[10px] uppercase tracking-[0.1em] text-muted-fg">
+          <div className="flex items-center gap-4">
+            <span className="flex items-center gap-1.5 text-foreground">
+              <span className="inline-block h-1.5 w-1.5 bg-terminal" />
+              SYS: ONLINE
+            </span>
+            <span>///</span>
+            <span>UNIT: VØLTAR-CORE</span>
+            <span>///</span>
+            <span>REV 2.6</span>
+          </div>
+          <div>ARCHIVO URBANO &amp; TALLER DE ESTAMPADO ®</div>
+        </div>
+      </div>
+
+      {/* Main bar */}
+      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        {/* Brand */}
+        <Link href="/" className="group flex items-center gap-3">
+          <VoltarLogo size="sm" />
+          <div className="flex items-baseline gap-1">
+            <span className="font-display text-3xl tracking-[-0.04em] text-foreground transition-colors group-hover:text-volt">
+              VØLTAR
+            </span>
+            <span className="font-mono text-[10px] text-volt">™</span>
+          </div>
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden items-center gap-2 md:flex">
-          {NAV_LINKS.map(({ href, label, isExact, cat }) => {
-            const isActive = isExact
-              ? pathname === '/catalog' && !currentCategory
-              : currentCategory === cat;
+        <nav className="hidden items-center gap-1 md:flex">
+          {NAV_LINKS.map(({ href, label, matchPath, exact, cat, isAccent }) => {
+            const isActive = cat
+              ? currentCategory === cat
+              : exact
+                ? pathname === matchPath && !currentCategory
+                : pathname.startsWith(matchPath || '');
 
             return (
               <Link
                 key={href}
                 href={href}
-                className={`relative px-4 py-2 text-xs font-bold uppercase tracking-widest transition-colors duration-150 ${
-                  isActive ? 'text-volt' : 'text-muted-fg hover:text-foreground'
+                className={`border px-3 py-1.5 font-mono text-[11px] font-bold uppercase tracking-[0.08em] transition-colors ${
+                  isActive
+                    ? 'border-volt bg-volt text-white'
+                    : isAccent
+                      ? 'border-volt/50 text-volt hover:border-volt hover:bg-volt hover:text-white'
+                      : 'border-transparent text-muted-fg hover:border-border-strong hover:text-foreground'
                 }`}
               >
                 {label}
-                {isActive && (
-                  <span className="absolute bottom-0 left-4 right-4 h-[2px] bg-volt animate-fade-up" style={{ animationDuration: '0.2s' }} />
-                )}
               </Link>
             );
           })}
         </nav>
 
-        {/* Right */}
-        <div className="flex items-center gap-3">
+        {/* Right controls + Search */}
+        <div className="flex items-center gap-2">
+          <div className="hidden md:block">
+            <GlobalSearch />
+          </div>
+
           <Link
             href="/admin"
-            className="hidden text-xs font-bold uppercase tracking-widest text-muted-fg transition-colors hover:text-volt sm:block"
+            className="hidden border border-border px-2.5 py-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.08em] text-muted-fg transition-colors hover:border-volt hover:text-volt sm:block"
           >
-            Admin
+            ADMIN
           </Link>
 
-          {/* Cart */}
           <button
             onClick={openCart}
-            className="group relative flex h-10 w-10 items-center justify-center border border-border bg-card text-muted-fg transition-all hover:border-volt hover:text-volt"
+            className="flex h-9 items-center gap-2 border border-border-strong bg-surface px-3 font-mono text-[11px] font-bold uppercase tracking-[0.08em] text-foreground transition-colors hover:border-volt hover:bg-volt hover:text-white"
             aria-label="Carrito"
           >
-            <ShoppingBag className="h-4 w-4 transition-transform group-hover:scale-110" />
-            {mounted && getTotalItems() > 0 && (
-              <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center bg-volt text-[10px] font-black text-black">
-                {getTotalItems()}
-              </span>
-            )}
+            <span>BAG:</span>
+            <span className="text-volt group-hover:text-white">{itemCount}</span>
           </button>
 
-          {/* Mobile toggle */}
           <button
-            className="flex h-10 w-10 items-center justify-center border border-border bg-card text-muted-fg transition-all hover:border-volt hover:text-volt md:hidden"
+            className="flex h-9 w-9 items-center justify-center border border-border-strong bg-surface text-foreground transition-colors hover:border-volt hover:text-volt md:hidden"
             onClick={() => setOpen(!open)}
             aria-label="Menú"
           >
-            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>
         </div>
       </div>
 
       {/* Mobile menu */}
       {open && (
-        <div className="absolute left-0 right-0 top-16 border-b border-border bg-surface px-4 py-6 shadow-dark-lg md:hidden animate-fade-up" style={{ animationDuration: '0.2s' }}>
-          <nav className="flex flex-col gap-2">
-            {NAV_LINKS.map(({ href, label, isExact, cat }) => {
-              const isActive = isExact
-                ? pathname === '/catalog' && !currentCategory
-                : currentCategory === cat;
-                
+        <div className="border-t border-border-strong bg-surface px-4 py-4 md:hidden">
+          <div className="mb-3">
+            <GlobalSearch />
+          </div>
+          <nav className="grid gap-px bg-border">
+            {NAV_LINKS.map(({ href, label, matchPath, exact, cat }) => {
+              const isActive = cat
+                ? currentCategory === cat
+                : exact
+                  ? pathname === matchPath && !currentCategory
+                  : pathname.startsWith(matchPath || '');
+
               return (
                 <Link
                   key={href}
                   href={href}
-                  className={`border-l-2 py-3 pl-4 text-sm font-bold uppercase tracking-widest transition-colors ${
-                    isActive ? 'border-volt text-volt bg-volt/5' : 'border-transparent text-muted-fg hover:text-foreground hover:bg-card'
+                  className={`bg-background px-4 py-3 font-mono text-xs font-bold uppercase tracking-[0.08em] ${
+                    isActive ? 'text-volt' : 'text-foreground'
                   }`}
                 >
                   {label}
                 </Link>
               );
             })}
-            <div className="mt-4 border-t border-border pt-4">
-              <Link
-                href="/admin"
-                className="flex items-center gap-2 py-2 text-xs font-bold uppercase tracking-widest text-muted-fg hover:text-volt"
-              >
-                Panel de Administración <span className="text-volt">→</span>
-              </Link>
-            </div>
+            <Link
+              href="/admin"
+              className="bg-background px-4 py-3 font-mono text-xs font-bold uppercase tracking-[0.08em] text-muted-fg"
+            >
+              [ ADMIN // PANEL ]
+            </Link>
           </nav>
         </div>
       )}
@@ -141,24 +166,21 @@ function NavbarContent() {
 
 export default function Navbar() {
   return (
-    <Suspense fallback={
-      <header className="sticky top-0 z-50 w-full border-b border-border bg-surface/95 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-0">
-            <span className="font-display text-4xl tracking-widest text-foreground">VOLT</span>
-            <span className="font-display text-4xl tracking-widest text-volt">AR</span>
+    <Suspense
+      fallback={
+        <header className="sticky top-0 z-40 w-full border-b border-border-strong bg-background">
+          <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center gap-3">
+              <VoltarLogo size="sm" />
+              <span className="font-display text-3xl tracking-[-0.04em] text-foreground">
+                VØLTAR
+              </span>
+            </div>
+            <div className="h-9 w-20 border border-border-strong bg-surface" />
           </div>
-          <div className="hidden gap-2 md:flex">
-            {NAV_LINKS.map(({ href, label }) => (
-              <div key={href} className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-muted-fg opacity-50">
-                {label}
-              </div>
-            ))}
-          </div>
-          <div className="h-10 w-10 border border-border bg-card" />
-        </div>
-      </header>
-    }>
+        </header>
+      }
+    >
       <NavbarContent />
     </Suspense>
   );

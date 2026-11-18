@@ -3,30 +3,31 @@
 @tailwind utilities;
 
 /* =====================================================
-   VOLTAR — Design System
-   Juventud. Energía. Sin límites.
+   VØLTAR — Industrial Brutalism & Tactical Telemetry
+   Deactivated CRT Dark Substrate + Hazard Red (#E61919)
    ===================================================== */
 
 @layer base {
   :root {
     --background:    #0A0A0A;
-    --surface:       #111111;
+    --surface:       #121212;
     --card:          #161616;
     --card-raised:   #1C1C1C;
-    --foreground:    #F0F0F0;
-    --muted-fg:      #666666;
-    --subtle:        #333333;
-    --border:        #222222;
-    --border-strong: #333333;
-    --volt:          #C8FF00;
-    --volt-dim:      rgba(200, 255, 0, 0.1);
-    --volt-glow:     rgba(200, 255, 0, 0.3);
-    --red-brand:     #FF2020;
+    --foreground:    #EAEAEA;
+    --muted-fg:      #7A7A7A;
+    --subtle:        #2A2A2A;
+    --border:        #262626;
+    --border-strong: #404040;
+    --volt:          #E61919;
+    --volt-dim:      rgba(230, 25, 25, 0.12);
+    --terminal:      #4AF626;
+    --red-brand:     #E61919;
   }
 
   *, *::before, *::after {
     border-color: var(--border);
     box-sizing: border-box;
+    border-radius: 0px !important;
   }
 
   html {
@@ -35,28 +36,28 @@
   }
 
   body {
-    font-family: var(--font-inter), system-ui, sans-serif;
+    font-family: var(--font-sans), system-ui, sans-serif;
     background-color: var(--background);
     color: var(--foreground);
     -webkit-font-smoothing: antialiased;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-bebas), sans-serif;
-    letter-spacing: 0.02em;
-    line-height: 0.95;
+    font-family: var(--font-display), sans-serif;
+    letter-spacing: -0.04em;
+    line-height: 0.88;
+    text-transform: uppercase;
   }
 
   ::selection {
     background-color: var(--volt);
-    color: #0A0A0A;
+    color: #EAEAEA;
   }
 
   ::-webkit-scrollbar       { width: 4px; }
   ::-webkit-scrollbar-track { background: var(--surface); }
   ::-webkit-scrollbar-thumb { background: var(--volt); }
 
-  /* Fix: autofill override — prevents white bg on inputs */
   input:-webkit-autofill,
   input:-webkit-autofill:hover,
   input:-webkit-autofill:focus,
@@ -68,19 +69,10 @@
   }
 }
 
-/* =====================================================
-   ANIMATIONS — fill-mode: both prevents flash
-   ===================================================== */
-
 @layer utilities {
   @keyframes fade-up {
-    from { opacity: 0; transform: translateY(20px); }
+    from { opacity: 0; transform: translateY(12px); }
     to   { opacity: 1; transform: translateY(0); }
-  }
-
-  @keyframes volt-pulse {
-    0%, 100% { box-shadow: 0 0 0 0 var(--volt-glow); }
-    50%       { box-shadow: 0 0 20px 6px var(--volt-glow); }
   }
 
   @keyframes marquee {
@@ -93,70 +85,102 @@
     to   { background-position: 200% center; }
   }
 
-  /* fill-mode: both → element is at "from" state BEFORE animation starts (no flash) */
   .animate-fade-up {
-    animation: fade-up 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: fade-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
-  .animate-volt-pulse { animation: volt-pulse 2s ease-in-out infinite; }
-  .animate-marquee    { animation: marquee 22s linear infinite; }
-
-  .delay-100 { animation-delay: 0.08s; }
-  .delay-200 { animation-delay: 0.16s; }
-  .delay-300 { animation-delay: 0.24s; }
-  .delay-400 { animation-delay: 0.32s; }
-
-  /* ── Brand utilities ── */
-  .text-volt          { color: var(--volt); }
-  .bg-volt            { background-color: var(--volt); }
-  .border-volt        { border-color: var(--volt); }
-  .text-red-brand     { color: var(--red-brand); }
-
-  .text-gradient-volt {
-    background: linear-gradient(135deg, #C8FF00, #8FFF00);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+  .animate-marquee {
+    animation: marquee 24s linear infinite;
   }
 
-  /* Skeleton shimmer for loading states */
+  .delay-100 { animation-delay: 0.06s; }
+  .delay-200 { animation-delay: 0.12s; }
+  .delay-300 { animation-delay: 0.18s; }
+  .delay-400 { animation-delay: 0.24s; }
+
+  .text-volt      { color: var(--volt); }
+  .bg-volt        { background-color: var(--volt); }
+  .border-volt    { border-color: var(--volt); }
+  .text-red-brand { color: var(--red-brand); }
+
+  /* CRT horizontal scanlines */
+  .crt-scanlines {
+    background-image: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.28) 2px,
+      rgba(0, 0, 0, 0.28) 4px
+    );
+  }
+
+  /* Mechanical SVG noise texture */
+  .noise-overlay {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Blueprint structural grid */
+  .volt-grid {
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 63px, rgba(234,234,234,0.04) 63px, rgba(234,234,234,0.04) 64px),
+      repeating-linear-gradient(90deg, transparent, transparent 63px, rgba(234,234,234,0.04) 63px, rgba(234,234,234,0.04) 64px);
+  }
+
+  /* Hazard warning stripes */
+  .hazard-stripes {
+    background-image: repeating-linear-gradient(
+      -45deg,
+      #E61919,
+      #E61919 8px,
+      #0A0A0A 8px,
+      #0A0A0A 16px
+    );
+  }
+
+  /* Industrial barcode strip */
+  .barcode-strip {
+    background-image: repeating-linear-gradient(
+      90deg,
+      #EAEAEA 0px, #EAEAEA 2px,
+      transparent 2px, transparent 4px,
+      #EAEAEA 4px, #EAEAEA 5px,
+      transparent 5px, transparent 8px,
+      #EAEAEA 8px, #EAEAEA 11px,
+      transparent 11px, transparent 13px
+    );
+  }
+
+  /* Skeleton shimmer */
   .skeleton {
     background: linear-gradient(90deg, var(--card) 25%, var(--card-raised) 50%, var(--card) 75%);
     background-size: 200% 100%;
     animation: shimmer 1.4s ease-in-out infinite;
   }
 
-  /* Volt stripe bg pattern */
-  .volt-grid {
-    background-image:
-      repeating-linear-gradient(0deg, transparent, transparent 79px, rgba(200,255,0,0.035) 79px, rgba(200,255,0,0.035) 80px),
-      repeating-linear-gradient(90deg, transparent, transparent 79px, rgba(200,255,0,0.035) 79px, rgba(200,255,0,0.035) 80px);
-  }
-
-  /* Consistent tag */
+  /* Monospace tactical tag */
   .tag-volt {
     display: inline-block;
     background-color: var(--volt-dim);
     color: var(--volt);
-    border: 1px solid rgba(200,255,0,0.25);
+    border: 1px solid var(--volt);
     font-size: 0.65rem;
-    font-weight: 800;
-    font-family: var(--font-inter), sans-serif;
-    letter-spacing: 0.12em;
+    font-weight: 700;
+    font-family: var(--font-mono), monospace;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    padding: 0.2rem 0.55rem;
-    border-radius: 2px;
+    padding: 0.2rem 0.5rem;
   }
 
-  /* Consistent input style — reusable via @apply */
+  /* Brutalist input */
   .input-volt {
     width: 100%;
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-strong);
     background-color: var(--surface);
     padding: 0.75rem 1rem;
-    font-size: 0.875rem;
+    font-family: var(--font-mono), monospace;
+    font-size: 0.8rem;
     color: var(--foreground);
     outline: none;
-    transition: border-color 0.15s;
+    transition: border-color 0.1s;
   }
   .input-volt::placeholder { color: var(--muted-fg); }
   .input-volt:focus { border-color: var(--volt); }

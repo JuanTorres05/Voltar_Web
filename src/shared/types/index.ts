@@ -57,3 +57,48 @@ export interface CartItem {
   color?: string;
   quantity: number;
 }
+
+// Tipos para Galería Urbana & Artistas Emergentes
+export type UrbanArtStyle = string;
+
+export interface Artist {
+  id: string;
+  slug: string;
+  tag: string;
+  crew: string;
+  city: string;
+  style: UrbanArtStyle;
+  bio: string;
+  instagram: string;
+  accentColor: 'volt' | 'pink' | 'cyan';
+}
+
+export interface ArtistArtwork {
+  id: string;
+  artist_id: string;
+  artist_tag: string;
+  artist_crew: string;
+  title: string;
+  style: UrbanArtStyle;
+  image_url: string;
+  description: string;
+  royalty_usd: number;
+}
+
+export type SubmissionStatus = 'pending' | 'approved' | 'rejected';
+
+export interface ArtistSubmission {
+  id: string;
+  artist_tag: string;
+  artist_crew: string;
+  artist_city: string;
+  artist_instagram: string;
+  artist_bio: string;
+  title: string;
+  style: UrbanArtStyle;
+  description: string;
+  image_url: string;
+  royalty_usd: number;
+  status: SubmissionStatus;
+  created_at: string;
+}

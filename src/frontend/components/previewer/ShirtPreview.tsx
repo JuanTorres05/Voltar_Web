@@ -61,7 +61,11 @@ const ShirtPreview = forwardRef<HTMLDivElement, ShirtPreviewProps>(
               <img 
                 src={uploadedImage} 
                 alt="Diseño subido"
-                className="max-w-[200px] h-auto object-contain mix-blend-multiply drop-shadow-md"
+                className={`max-w-[200px] h-auto object-contain drop-shadow-md ${
+                  shirtColor === '#FFFFFF' || shirtColor === '#FFB6C1' || shirtColor === '#DAA520'
+                    ? 'mix-blend-multiply'
+                    : 'mix-blend-normal'
+                }`}
                 crossOrigin="anonymous"
               />
             </div>

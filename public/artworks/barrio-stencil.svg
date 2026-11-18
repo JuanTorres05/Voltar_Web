@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" fill="none">
+  <!-- Stencil Splatter -->
+  <circle cx="200" cy="190" r="120" fill="#FF0055" opacity="0.22"/>
+  <circle cx="160" cy="150" r="70" fill="#C8FF00" opacity="0.18"/>
+  <!-- Barbed Wire / Street Lines -->
+  <path d="M40 200 L360 200" stroke="#F0F0F0" stroke-width="6"/>
+  <path d="M90 182 L110 218 M110 182 L90 218" stroke="#C8FF00" stroke-width="5"/>
+  <path d="M290 182 L310 218 M310 182 L290 218" stroke="#C8FF00" stroke-width="5"/>
+  <!-- Bold Stencil Typography -->
+  <g transform="rotate(-7 200 190)">
+    <rect x="65" y="120" width="270" height="75" fill="#C8FF00" stroke="#0A0A0A" stroke-width="6"/>
+    <text x="200" y="176" text-anchor="middle" font-family="Impact, Arial Black, sans-serif" font-size="56" letter-spacing="4" fill="#0A0A0A">BARRIO</text>
+    <rect x="85" y="205" width="230" height="65" fill="#FF0055" stroke="#0A0A0A" stroke-width="6"/>
+    <text x="200" y="254" text-anchor="middle" font-family="Impact, Arial Black, sans-serif" font-size="48" letter-spacing="5" fill="#FFFFFF">VIVO</text>
+  </g>
+  <!-- Drips -->
+  <path d="M120 265 L120 325 C120 335 132 335 132 325 L132 265 Z" fill="#FF0055"/>
+  <path d="M265 188 L265 240 C265 250 275 250 275 240 L275 188 Z" fill="#C8FF00"/>
+</svg>

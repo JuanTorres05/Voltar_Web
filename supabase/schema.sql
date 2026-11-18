@@ -46,3 +46,29 @@ CREATE TABLE order_items (
   selected_color TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
+
+-- Tabla: artistas urbanos (artists)
+CREATE TABLE artists (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  slug TEXT UNIQUE NOT NULL,
+  tag TEXT NOT NULL,
+  crew TEXT,
+  city TEXT,
+  style TEXT NOT NULL,
+  bio TEXT,
+  instagram TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- Tabla: obras de artistas (artist_artworks)
+CREATE TABLE artist_artworks (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  artist_id UUID REFERENCES artists(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  style TEXT NOT NULL,
+  image_url TEXT NOT NULL,
+  description TEXT,
+  royalty_usd DECIMAL(10, 2) NOT NULL DEFAULT 5.00,
+  status TEXT NOT NULL DEFAULT 'pending', -- pending, approved, rejected
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);

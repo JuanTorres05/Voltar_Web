@@ -1,8 +1,15 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Upload, Plus, X, Check } from 'lucide-react';
+import Link from 'next/link';
+import { Upload, Plus, X, Check, Trash2 } from 'lucide-react';
+import {
+  getSubmissions,
+  updateSubmissionStatus,
+  deleteSubmission,
+} from '@/frontend/lib/artistSubmissions';
+import { ArtistSubmission } from '@/shared/types';
 
 const DEMO_PRODUCTS = [
   {
@@ -80,10 +87,18 @@ export default function AdminPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading]     = useState(false);
   const [seeding, setSeeding]     = useState(false);
+  const [activeTab, setActiveTab] = useState<'products' | 'submissions'>('products');
+  const [submissions, setSubmissions] = useState<ArtistSubmission[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [previews, setPreviews]   = useState<string[]>([]);
   const [error, setError]         = useState<string | null>(null);
   const [success, setSuccess]     = useState(false);
+
+  useEffect(() => {
+    setSubmissions(getSubmissions());
+  }, []);
+
+  const pendingCount = submissions.filter((s) => s.status === 'pending').length;
 
   const handleSeedDemoData = async () => {
     setSeeding(true);
@@ -193,20 +208,152 @@ export default function AdminPage() {
               NUEVO <span className="text-volt">PRODUCTO</span>
             </h1>
           </div>
-          <div>
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={handleSeedDemoData}
               disabled={seeding}
-              className="border border-volt bg-surface hover:bg-volt hover:text-black text-volt px-5 py-2.5 text-xs font-black uppercase tracking-widest transition-all duration-150 active:scale-95 disabled:opacity-50"
+              className="border border-volt bg-surface hover:bg-volt hover:text-white text-volt px-5 py-2.5 font-mono text-xs font-black uppercase tracking-widest transition-all duration-150 active:scale-95 disabled:opacity-50"
             >
               {seeding ? 'SEMBRANDO...' : 'SEMBRAR DEMO DATA'}
             </button>
           </div>
         </div>
+
+        {/* Tabs de administración */}
+        <div className="mx-auto mt-6 flex max-w-3xl flex-wrap gap-px border border-border-strong bg-border-strong">
+          <button
+            type="button"
+            onClick={() => setActiveTab('products')}
+            className={`flex-1 px-4 py-3 font-mono text-xs font-extrabold uppercase tracking-[0.08em] transition-colors ${
+              activeTab === 'products'
+                ? 'bg-volt text-white'
+                : 'bg-background text-muted-fg hover:text-foreground'
+            }`}
+          >
+            [ + NUEVO PRODUCTO ]
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('submissions')}
+            className={`flex-1 px-4 py-3 font-mono text-xs font-extrabold uppercase tracking-[0.08em] transition-colors ${
+              activeTab === 'submissions'
+                ? 'bg-volt text-white'
+                : 'bg-background text-muted-fg hover:text-foreground'
+            }`}
+          >
+            [ SOLICITUDES DE ARTISTAS ({pendingCount}) ]
+          </button>
+        </div>
       </div>
 
       <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
+
+        {activeTab === 'submissions' ? (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between border-b border-border pb-4 font-mono text-xs uppercase">
+              <span className="text-muted-fg">
+                [ {submissions.length} SOLICITUDES REGISTRADAS ]
+              </span>
+              <Link href="/artists/submit" className="text-volt hover:underline">
+                [ IR AL FORMULARIO DE ARTISTA &gt;&gt;&gt; ]
+              </Link>
+            </div>
+
+            {submissions.length === 0 ? (
+              <div className="border border-border-strong bg-surface p-12 text-center font-mono">
+                <p className="text-xs uppercase tracking-widest text-muted-fg">
+                  NO HAY OBRAS ENVIADAS POR ARTISTAS TODAVÍA.
+                </p>
+                <Link
+                  href="/artists/submit"
+                  className="mt-5 inline-block border border-volt bg-volt px-5 py-3 text-xs font-extrabold uppercase tracking-widest text-white"
+                >
+                  [ PROBAR SUBIR UNA OBRA &gt;&gt;&gt; ]
+                </Link>
+              </div>
+            ) : (
+              submissions.map((sub) => (
+                <div
+                  key={sub.id}
+                  className="grid grid-cols-1 gap-px border border-border-strong bg-border-strong sm:grid-cols-12"
+                >
+                  <div className="flex items-center justify-center bg-card p-4 sm:col-span-4">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={sub.image_url}
+                      alt={sub.title}
+                      className="max-h-44 w-full object-contain"
+                    />
+                  </div>
+
+                  <div className="flex flex-col justify-between bg-background p-5 sm:col-span-8">
+                    <div>
+                      <div className="flex flex-wrap items-center justify-between gap-2 font-mono text-[10px] uppercase">
+                        <span className="text-muted-fg">
+                          {sub.artist_tag} · {sub.artist_crew} · {sub.artist_city}
+                        </span>
+                        <span
+                          className={`border px-2 py-0.5 font-bold ${
+                            sub.status === 'approved'
+                              ? 'border-terminal text-terminal'
+                              : sub.status === 'rejected'
+                                ? 'border-volt text-volt'
+                                : 'border-border-strong text-foreground'
+                          }`}
+                        >
+                          {sub.status.toUpperCase()}
+                        </span>
+                      </div>
+
+                      <h3 className="mt-2 font-display text-3xl uppercase text-foreground">
+                        {sub.title}
+                      </h3>
+                      <p className="mt-1 font-mono text-[10px] uppercase text-volt">
+                        ESTILO: {sub.style} · IG: {sub.artist_instagram}
+                      </p>
+                      <p className="mt-2 font-mono text-xs text-muted-fg">
+                        {sub.description}
+                      </p>
+                    </div>
+
+                    <div className="mt-5 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSubmissions(updateSubmissionStatus(sub.id, 'approved'))
+                        }
+                        className="flex items-center gap-1.5 border border-terminal bg-transparent px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-widest text-terminal transition-colors hover:bg-terminal hover:text-black"
+                      >
+                        <Check className="h-3.5 w-3.5" />
+                        [ APROBAR ]
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSubmissions(updateSubmissionStatus(sub.id, 'rejected'))
+                        }
+                        className="flex items-center gap-1.5 border border-volt bg-transparent px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-widest text-volt transition-colors hover:bg-volt hover:text-white"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                        [ RECHAZAR ]
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSubmissions(deleteSubmission(sub.id))}
+                        className="ml-auto flex items-center gap-1 border border-border-strong px-3 py-2 font-mono text-[10px] uppercase text-muted-fg hover:border-volt hover:text-volt"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        ELIMINAR
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        ) : (
+          <>
 
         {/* Alerts */}
         {error && (
@@ -411,6 +558,8 @@ export default function AdminPage() {
             Configura las variables de entorno de Cloudinary para subir imágenes.
           </p>
         </form>
+          </>
+        )}
       </div>
     </div>
   );

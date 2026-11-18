@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" fill="none">
+  <!-- Mic & Street Wings -->
+  <circle cx="200" cy="185" r="130" fill="#161616" stroke="#C8FF00" stroke-width="5" stroke-dasharray="10 6"/>
+  <!-- Mic Head -->
+  <rect x="165" y="85" width="70" height="105" rx="35" fill="#F0F0F0" stroke="#0A0A0A" stroke-width="6"/>
+  <line x1="165" y1="138" x2="235" y2="138" stroke="#FF0055" stroke-width="8"/>
+  <!-- Mic Grid lines -->
+  <line x1="175" y1="112" x2="225" y2="112" stroke="#0A0A0A" stroke-width="4"/>
+  <line x1="172" y1="124" x2="228" y2="124" stroke="#0A0A0A" stroke-width="4"/>
+  <!-- Mic Handle -->
+  <path d="M182 190 L188 290 L212 290 L218 190 Z" fill="#333333" stroke="#0A0A0A" stroke-width="5"/>
+  <!-- Street Stars -->
+  <polygon points="90,140 98,158 118,160 102,172 106,192 90,182 74,192 78,172 62,160 82,158" fill="#C8FF00"/>
+  <polygon points="310,140 318,158 338,160 322,172 326,192 310,182 294,192 298,172 282,160 302,158" fill="#00F0FF"/>
+  <!-- Tag -->
+  <text x="200" y="346" text-anchor="middle" font-family="Impact, Arial Black, sans-serif" font-size="38" letter-spacing="4" fill="#C8FF00" stroke="#0A0A0A" stroke-width="2">RAW FREESTYLE</text>
+</svg>
